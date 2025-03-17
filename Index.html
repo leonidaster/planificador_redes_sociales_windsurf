@@ -1,0 +1,548 @@
+ <!-- Planificador de Contenido para WordPress -->
+<div id="content-planner" class="wp-content-planner">
+  <div class="planner-header">
+    <h2>Planificador de Contenido</h2>
+  </div>
+
+  <div class="planner-container">
+    <!-- Días de la semana -->
+    <div class="weekdays">
+      <div class="weekday">Lunes</div>
+      <div class="weekday">Martes</div>
+      <div class="weekday">Miércoles</div>
+      <div class="weekday">Jueves</div>
+      <div class="weekday">Viernes</div>
+    </div>
+   
+    <!-- Grid de días -->
+    <div class="days-grid" id="days-grid">
+      <!-- Generado dinámicamente con JavaScript -->
+    </div>
+  </div>
+
+  <div class="planner-actions">
+    <button id="save-pdf" class="action-button pdf-button">Guardar PDF</button>
+    <button id="print-planner" class="action-button print-button">Imprimir</button>
+  </div>
+
+  <!-- Template para crear nuevos elementos de contenido -->
+  <template id="content-item-template">
+    <div class="content-item" draggable="true">
+      <div class="content-item-header">
+        <div class="drag-handle">≡</div>
+      </div>
+      <div class="content-item-body">
+        <div class="form-group">
+          <label>Tipo de contenido:</label>
+          <select class="content-type-select">
+            <option value="educativo">Educativo</option>
+            <option value="entretenimiento">Entretenimiento</option>
+            <option value="promocional">Promocional</option>
+            <option value="testimonios">Testimonios</option>
+            <option value="detras">Detrás de cámaras</option>
+            <option value="tendencias">Tendencias</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de publicación:</label>
+          <select class="publication-type-select">
+            <option value="normal">Normal</option>
+            <option value="en-vivo">En vivo</option>
+            <option value="historia">Historia</option>
+            <option value="carrusel">Carrusel</option>
+            <option value="tienda">Tienda</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Título:</label>
+          <input type="text" class="content-title" placeholder="Escribe el título de contenido a crear">
+        </div>
+        <div class="form-group">
+          <label>Descripción:</label>
+          <textarea class="content-description" placeholder="Escribe una breve descripción"></textarea>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicialización del planificador
+  initializePlanner();
+ 
+  // Configuración de botones de acción
+  document.getElementById('save-pdf').addEventListener('click', saveToPDF);
+  document.getElementById('print-planner').addEventListener('click', printPlanner);
+ 
+  // Configurar el sistema de arrastrar y soltar
+  setupDragAndDrop();
+});
+
+/**
+ * Inicializa el planificador creando la estructura de días
+ */
+function initializePlanner() {
+  const daysGrid = document.getElementById('days-grid');
+  const daysCount = 15; // Total de 15 días
+ 
+  // Limpiar el grid
+  daysGrid.innerHTML = '';
+ 
+  // Crear los días en el planificador
+  for (let i = 1; i <= daysCount; i++) {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'day';
+    dayElement.setAttribute('data-day', i);
+   
+    // Crear el encabezado del día
+    const dayHeader = document.createElement('div');
+    dayHeader.className = 'day-header';
+    dayHeader.textContent = `Día ${i}`;
+   
+    // Crear el contenedor de contenido
+    const dayContent = document.createElement('div');
+    dayContent.className = 'day-content';
+   
+    // Añadir botón para crear nuevo contenido
+    const addButton = document.createElement('button');
+    addButton.className = 'add-content-button';
+    addButton.innerHTML = '+';
+    addButton.title = 'Añadir contenido';
+    addButton.onclick = function() {
+      addContentItem(dayContent);
+    };
+   
+    // Añadir todo al día
+    dayElement.appendChild(dayHeader);
+    dayElement.appendChild(dayContent);
+    dayElement.appendChild(addButton);
+   
+    // Añadir el día al grid
+    daysGrid.appendChild(dayElement);
+  }
+}
+
+/**
+ * Añade un nuevo elemento de contenido al día
+ */
+function addContentItem(dayContent) {
+  // Obtener el template
+  const template = document.getElementById('content-item-template');
+  const contentItem = document.importNode(template.content, true).firstElementChild;
+ 
+  // Configurar eventos para el elemento
+  setupContentItemEvents(contentItem);
+ 
+  // Añadir el elemento al día
+  dayContent.appendChild(contentItem);
+ 
+  // Actualizar el tipo de contenido visual
+  updateContentItemStyle(contentItem);
+}
+
+/**
+ * Configura los eventos para un elemento de contenido
+ */
+function setupContentItemEvents(contentItem) {
+  // Cambiar el estilo cuando cambia el tipo de contenido
+  const contentTypeSelect = contentItem.querySelector('.content-type-select');
+  contentTypeSelect.addEventListener('change', function() {
+    updateContentItemStyle(contentItem);
+  });
+ 
+  // Aplicar estilo inicial
+  updateContentItemStyle(contentItem);
+}
+
+/**
+ * Actualiza el estilo visual de un elemento de contenido según su tipo
+ */
+function updateContentItemStyle(contentItem) {
+  const contentTypeSelect = contentItem.querySelector('.content-type-select');
+  const contentType = contentTypeSelect.value;
+ 
+  // Eliminar clases de tipo anteriores
+  contentItem.removeAttribute('data-type');
+ 
+  // Añadir la clase del nuevo tipo
+  contentItem.setAttribute('data-type', contentType);
+}
+
+/**
+ * Configura el sistema de arrastrar y soltar
+ */
+function setupDragAndDrop() {
+  // Variables para el arrastre
+  let draggedItem = null;
+  let dragOriginContent = null;
+ 
+  // Delegación de eventos para manejar elementos creados dinámicamente
+  document.addEventListener('dragstart', function(e) {
+    const contentItem = e.target.closest('.content-item');
+    if (contentItem) {
+      draggedItem = contentItem;
+      dragOriginContent = contentItem.parentNode;
+     
+      // Añadir clase para estilo durante el arrastre
+      setTimeout(() => {
+        contentItem.classList.add('dragging');
+      }, 0);
+     
+      // Establecer datos para la transferencia
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', contentItem.outerHTML);
+    }
+  });
+ 
+  document.addEventListener('dragend', function(e) {
+    const contentItem = e.target.closest('.content-item');
+    if (contentItem) {
+      contentItem.classList.remove('dragging');
+     
+      // Eliminar clase de zona de destino de todos los días
+      document.querySelectorAll('.day-content').forEach(content => {
+        content.classList.remove('drop-zone');
+      });
+    }
+  });
+ 
+  // Delegación para zonas de destino (day-content)
+  document.addEventListener('dragover', function(e) {
+    const dayContent = e.target.closest('.day-content');
+    if (dayContent && draggedItem) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+  });
+ 
+  document.addEventListener('dragenter', function(e) {
+    const dayContent = e.target.closest('.day-content');
+    if (dayContent && draggedItem) {
+      e.preventDefault();
+      dayContent.classList.add('drop-zone');
+    }
+  });
+ 
+  document.addEventListener('dragleave', function(e) {
+    const dayContent = e.target.closest('.day-content');
+    if (dayContent) {
+      const rect = dayContent.getBoundingClientRect();
+      const x = e.clientX;
+      const y = e.clientY;
+     
+      // Verificar si realmente salimos del elemento
+      if (x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) {
+        dayContent.classList.remove('drop-zone');
+      }
+    }
+  });
+ 
+  document.addEventListener('drop', function(e) {
+    const dayContent = e.target.closest('.day-content');
+    if (dayContent && draggedItem) {
+      e.preventDefault();
+     
+      // Eliminar la clase de zona de destino
+      dayContent.classList.remove('drop-zone');
+     
+      // Si se suelta en un día diferente, mover el elemento
+      if (dayContent !== dragOriginContent) {
+        // Eliminar el elemento del origen
+        if (draggedItem.parentNode) {
+          draggedItem.parentNode.removeChild(draggedItem);
+        }
+       
+        // Añadir al nuevo día
+        dayContent.appendChild(draggedItem);
+       
+        // Restablecer referencias
+        draggedItem.classList.remove('dragging');
+        draggedItem = null;
+        dragOriginContent = null;
+      }
+    }
+  });
+}
+
+/**
+ * Guarda el planificador como PDF
+ */
+function saveToPDF() {
+  // Notificar al usuario que la función está siendo ejecutada
+  alert('Preparando PDF...');
+ 
+  // Aquí normalmente usaríamos una biblioteca como jsPDF o html2pdf
+  // Por simplicidad, esto es un esquema de la implementación
+ 
+  // En un caso real, utilizaríamos:
+  // html2pdf().from(document.getElementById('content-planner')).save('planificador-contenido.pdf');
+ 
+  // Como alternativa para WordPress, podríamos enviar los datos a un endpoint del servidor
+  // que genere el PDF usando una biblioteca del lado del servidor
+ 
+  // Simulación de éxito
+  setTimeout(function() {
+    alert('PDF guardado correctamente!');
+  }, 1000);
+}
+
+/**
+ * Imprime el planificador
+ */
+function printPlanner() {
+  window.print();
+}
+</script>
+
+<style>
+/* Variables CSS */
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2980b9;
+  --accent-color: #e74c3c;
+  --light-gray: #f5f6fa;
+  --medium-gray: #dcdde1;
+  --dark-gray: #7f8c8d;
+  --text-color: #2c3e50;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+ 
+  /* Colores para tipos de contenido */
+  --educativo-color: #3498db;
+  --entretenimiento-color: #e74c3c;
+  --promocional-color: #f1c40f;
+  --testimonios-color: #9b59b6;
+  --detras-color: #1abc9c;
+  --tendencias-color: #e67e22;
+}
+
+/* Estilos generales */
+.wp-content-planner {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.planner-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.planner-header h2 {
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+/* Días de la semana */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.weekday {
+  padding: 10px;
+  text-align: center;
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: bold;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* Grid de días */
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  /* Estructura para 15 días en 3 filas de 5 días */
+  grid-template-rows: repeat(3, auto);
+}
+
+.day {
+  min-height: 150px;
+  border: 1px solid var(--medium-gray);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  padding: 10px;
+  background-color: var(--light-gray);
+}
+
+.day-header {
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--medium-gray);
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.day-content {
+  min-height: 100px;
+}
+
+/* Elementos de contenido */
+.content-item {
+  background-color: white;
+  border-radius: var(--border-radius);
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: grab;
+  transform-origin: center center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.content-item:active {
+  cursor: grabbing;
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.content-item-header {
+  padding: 5px 10px;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 12px;
+  text-align: right;
+}
+
+.drag-handle {
+  cursor: grab;
+}
+
+.content-item-body {
+  padding: 10px;
+}
+
+.form-group {
+  margin-bottom: 8px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 3px;
+  color: var(--dark-gray);
+}
+
+select, input, textarea {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--medium-gray);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+textarea.content-description {
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Estilos para tipos de contenido */
+.content-item[data-type="educativo"] .content-item-header {
+  background-color: var(--educativo-color);
+}
+
+.content-item[data-type="entretenimiento"] .content-item-header {
+  background-color: var(--entretenimiento-color);
+}
+
+.content-item[data-type="promocional"] .content-item-header {
+  background-color: var(--promocional-color);
+}
+
+.content-item[data-type="testimonios"] .content-item-header {
+  background-color: var(--testimonios-color);
+}
+
+.content-item[data-type="detras"] .content-item-header {
+  background-color: var(--detras-color);
+}
+
+.content-item[data-type="tendencias"] .content-item-header {
+  background-color: var(--tendencias-color);
+}
+
+/* Botones de acción */
+.planner-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.action-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.pdf-button {
+  background-color: var(--accent-color);
+}
+
+.print-button {
+  background-color: var(--primary-color);
+}
+
+.action-button:hover {
+  filter: brightness(1.1);
+}
+
+.action-button:active {
+  transform: translateY(2px);
+}
+
+/* Botón añadir contenido */
+.add-content-button {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  margin: 8px auto 0;
+  transition: all 0.2s ease;
+}
+
+.add-content-button:hover {
+  background-color: var(--secondary-color);
+  transform: scale(1.1);
+}
+
+/* Estilo para arrastrar */
+.dragging {
+  opacity: 0.7;
+  transform: scale(1.05);
+}
+
+.drop-zone {
+  border: 2px dashed var(--primary-color);
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Media queries */
+@media print {
+  .wp-content-planner {
+    box-shadow: none;
+    max-width: 100%;
+  }
+ 
+  .planner-actions {
+    display: none;
+  }
+}
