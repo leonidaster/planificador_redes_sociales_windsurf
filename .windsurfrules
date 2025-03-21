@@ -1,0 +1,193 @@
+# Reglas de Desarrollo para Planificador de Contenido en WordPress
+
+## Especificaciones técnicas
+
+### Lenguajes requeridos
+- **HTML5**: Para la estructura del bloque de Gutenberg
+- **CSS3**: Para el diseño y estilo del planificador
+- **JavaScript puro**: Para la funcionalidad de arrastrar y soltar, botón de agregar elementos, la generación de PDF, el boton de imprimir, la función de exportar en formato csv e importar.
+
+### Estructura del proyecto
+- Código totalmente compatible con Gutenberg
+- Implementación mediante bloque HTML personalizado
+- Sin dependencia de plugins adicionales
+- Compatible con todas las versiones de WordPress 5.0+
+
+## Funcionalidades requeridas
+### Planificador de contenido
+Por favor, genera una **cuadrícula de planificación mensual** con las siguientes características:  
+# Estructura de 5 Semanas
+- La estructura debe contener **5 filas**, representando **5 semanas completas**.
+- Cada fila debe representar una **semana completa**.
+- Las columnas deben mostrar los **días de la semana** en el siguiente orden:
+  - **Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo**.
+- **No uses números** para los días, como "Día 1", "Día 2", etc.
+  - Utiliza **únicamente los nombres de los días de la semana**.
+
+#### Capacidad  
+- La cuadrícula debe permitir **planificar contenido para un total de 31 días** (aproximadamente un mes).  
+
+# Diseño de cuadrícula con sistema de botones dinámicos
+
+## Estructura base de cada celda
+
+Cada celda de la cuadrícula debe inicialmente mostrar un único botón de adición en la parte inferior. 
+- Este botón debe ser **ovalado**, de **color azul** y contener un **icono "+" blanco** centrado.  
+
+## Comportamiento dinámico
+
+### Estado inicial  
+- Solo existe un botón en la parte inferior de la celda.  
+
+### Cuando el usuario agrega un elemento de contenido (al hacer clic en el botón):  
+1. El elemento de contenido se crea y se muestra en la celda.  
+2. Automáticamente aparecen **dos botones de adición**:  
+   - **Uno encima** del elemento creado.  
+   - **Uno debajo** del elemento creado.  
+3. El botón superior permite agregar un nuevo elemento **arriba** del existente.  
+4. El botón inferior permite agregar un nuevo elemento **debajo** del existente.  
+
+## Interactividad
+
+- Al hacer clic en cualquiera de los botones de adición, se crea un **nuevo elemento** en la posición correspondiente.  
+- La interfaz debe ser **intuitiva**, permitiendo al usuario entender fácilmente cómo agregar elementos en diferentes posiciones.  
+
+## Visualización
+
+- **Todos los botones de adición** deben mantener el mismo diseño:  
+  - **Ovalado**  
+  - **Color azul**  
+  - **Icono "+" blanco**  
+
+### Sistema de Arrastrar y Soltar
+
+Crea un sistema de arrastrar y soltar con las siguientes características:
+
+- **Elementos arrastrables** entre diferentes días de la semana.
+- **Persistencia de datos** al mover elementos de un lugar a otro.
+- **Interacción flexible**: los elementos deben poder soltarse en cualquier parte de la celda del día.
+- **Ordenación interna**Permite reorganizar elementos dentro del mismo día, moviéndolos arriba o abajo.
+- **Retroalimentación visual**:
+  - Indicar visualmente el elemento en arrastre.
+  - Destacar la zona de destino al moverlo entre días o dentro del mismo día.
+- **Animaciones suaves** para el arrastre y la colocación, mejorando la experiencia del usuario.
+
+El sistema debe ser intuitivo y visualmente atractivo, asegurando una experiencia fluida para el usuario.
+
+### Elementos de contenido
+Para cada elemento incluir:
+
+Un dropdown selector con estas opciones (sin título):
+   - Contenido Educativo
+   - Contenido de Entretenimiento  
+   - Contenido Promocional
+   - Contenido Testimonios
+   - Contenido Detrás cámaras
+   - Contenido Tendencias
+
+Un dropdown selector con estas opciones (sin título):
+   - Publicación Normal
+   - Publicación En vivo
+   - Publicación Historia 
+   - Publicación Carrusel
+   - Publicación Tienda
+
+Un campo de texto con el placeholder:
+   "Escribe tu texto"
+
+Un campo de texto con el placeholder:
+   "Escribe una breve Descripción"
+
+Requisito visual:
+- Cada tipo de contenido debe tener un color distintivo que coloree el recuadro completo del elemento
+
+Importante:
+- NO incluir títulos como "Tipo de Contenido" o "Tipo de Publicación"
+- Solo mostrar los selectores dropdown directamente
+
+### Exportación
+- Botón de exportación a PDF funcional
+- Botón de impresión con preservación de formato
+- Botón para exportar en csv
+- Botón para importar 
+- Mantenimiento de estilos y diseño entre las opciones
+
+
+## Mejores prácticas de desarrollo
+
+### Código HTML
+- Estructura semántica con elementos HTML5 apropiados
+- Uso de atributos ARIA para accesibilidad
+- Validación W3C del código HTML
+- Comentarios descriptivos en secciones clave
+
+### Código CSS
+- Enfoque "mobile-first" con diseño responsivo
+- Variables CSS para gestión de colores y estilos
+- Prefijos para propiedades que requieran compatibilidad entre navegadores
+- Optimización de rendimiento de animaciones
+- BEM (Block Element Modifier) para nomenclatura de clases
+
+### Código JavaScript
+- Código ES6+ compatible con navegadores modernos
+- Evitar uso de variables globales
+- Manejo adecuado de eventos (delegación cuando sea apropiado)
+- Validación de datos de entrada
+- Comentarios explicativos para funciones complejas
+- Manejo apropiado de errores
+
+## Prevención de vulnerabilidades
+
+### Seguridad general
+- Sanitización de todos los datos de entrada
+- Escape apropiado de salidas HTML
+- No uso de innerHTML donde sea evitable
+- Evitar eval() y otras funciones potencialmente peligrosas
+
+### XSS (Cross-Site Scripting)
+- Filtrar y validar todos los datos ingresados por el usuario
+- Usar textContent en lugar de innerHTML cuando sea posible
+- Implementar CSP (Content Security Policy) apropiado
+
+### CSRF (Cross-Site Request Forgery)
+- Validar origen de peticiones
+- Implementar tokens de seguridad para operaciones críticas
+
+### Inyección de código
+- Escapar correctamente todas las entradas de usuario
+- No usar concatenación directa de cadenas para generar HTML
+
+## Rendimiento y optimización
+
+### Optimización de carga
+- Minimización de CSS y JavaScript para producción
+- Optimización de imágenes utilizadas
+- Uso de lazy loading cuando sea apropiado
+
+### Rendimiento del DOM
+- Minimizar operaciones de manipulación del DOM
+- Uso de DocumentFragment para inserciones múltiples
+- Evitar layout thrashing (alternancia entre lecturas y escrituras del DOM)
+
+### Manejo de memoria
+- Evitar memory leaks (eliminar event listeners cuando no se necesiten)
+- Limpieza apropiada de recursos
+- Optimización de closures y alcance de variables
+
+## Accesibilidad
+
+### Estándares WCAG
+- Cumplimiento con WCAG 2.1 nivel AA
+- Contraste de color adecuado
+- Navegación por teclado completa
+- Etiquetas y textos alternativos informativos
+
+### Dispositivos y navegadores
+- Compatibilidad con lectores de pantalla
+- Pruebas en múltiples dispositivos y navegadores
+- Funcionalidad degradable elegantemente
+## Documentación
+
+### Código
+- Comentarios explicativos para secciones complejas
+- Explicación clara de la estructura de datos
