@@ -503,9 +503,10 @@ textarea.content-description {
   transform: translateY(2px);
 }
 
-/* Botón añadir contenido */
 .add-content-button {
-  display: block;
+  display: flex;              /* Usamos flexbox */
+  justify-content: center;    /* Centrado horizontal */
+  align-items: center;        /* Centrado vertical */
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -513,9 +514,8 @@ textarea.content-description {
   color: white;
   border: none;
   font-size: 18px;
-  line-height: 1;
   cursor: pointer;
-  margin: 8px auto 0;
+  margin: 8px auto 0;         /* Ajusta si necesitas cambiar la separación superior */
   transition: all 0.2s ease;
 }
 
